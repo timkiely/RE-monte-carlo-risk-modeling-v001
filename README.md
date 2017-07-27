@@ -174,7 +174,7 @@ office_rents %>%
 
 ![](README_files/figure-markdown_github/unnamed-chunk-7-1.png)
 
-Forecasting cumulative rent grwoth over 10 years
+Forecasting cumulative rent growth over 10 years
 ------------------------------------------------
 
 ``` r
