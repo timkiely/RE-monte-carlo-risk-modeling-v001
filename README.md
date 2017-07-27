@@ -343,8 +343,8 @@ sale_price_sim %>%
 
 ![](README_files/figure-markdown_github/unnamed-chunk-15-1.png)
 
-Simualtion of NOI
-=================
+Simualtion of Return On Investment
+==================================
 
 ``` r
 ROI <- round((sale_price_sim - purchase_price)/purchase_price,2)

@@ -309,7 +309,7 @@ sale_price_sim %>%
 
 ```
 
-# Simualtion of NOI
+# Simualtion of Return On Investment
 ```{r}
 
 ROI <- round((sale_price_sim - purchase_price)/purchase_price,2)
