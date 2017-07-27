@@ -1,7 +1,7 @@
 ROI Value-at-Risk Modeling for Commerical Real Estate Investments
 ================
 
-This is a basic model and simulation exercise simulating how forecasting and Monte Carlo simulation can be used to create Value-at-Risk sensitivity analyses. Here, we consider a hypothetical Manhattan Office building purchased in year T and sold in year T+10. By roughly estimating and then forcasting the Net Operating Income and the Exit Cap Rate, we are able to determine possible ROI and subsequently Value-at-Risk.
+This is a basic model and simulation exercise demonstrating how forecasting and Monte Carlo simulation can be used to create Value-at-Risk sensitivity analyses. Here, we consider a hypothetical Manhattan Office building purchased in year T and sold in year T+10. By roughly estimating and then forecasting the Net Operating Income and the Exit Cap Rate, we are able to determine possible ROI and subsequently Value-at-Risk.
 
 ``` r
 rm(list=ls())
