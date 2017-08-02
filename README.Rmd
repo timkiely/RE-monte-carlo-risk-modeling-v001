@@ -68,7 +68,13 @@ bind_rows(cap_data, forcast_cap_data) %>%
 ```
 
 
-With ranges of potential assumption values, we can then simulate many potential future states based on combinations of assumption probabilities. This results in likelihood ranges for things like exit caps, sale price, IRR, ROI and more. We're also able to answer the question: How likely am I to make money on this investment? 
+With ranges of potential assumption values, we can then simulate many potential future states based on combinations of assumption probabilities. This results in likelihood ranges for things like exit caps, sale price, IRR, ROI and more, for example:
+
+
+![Unlevered IRR Ranges](img/unlevered-irr.png)
+
+
+We're also able to answer the all important question: How likely am I to lose money on this investment? 
 
 We are going to combine univariate forecasts of some top-level underwriting assumptions with Monte Carlo simulation to generate a range of probable IRR's for a hypothetical Manhattan Office investment. 
 
