@@ -1,7 +1,15 @@
-ROI Value-at-Risk Modeling for Commerical Real Estate Investments
+Commerical Real Estate Investment Risk Analysis using Monte Carlo Simulation
 ================
 
-This is a basic model and simulation exercise demonstrating how forecasting and Monte Carlo simulation can be used to create Value-at-Risk sensitivity analyses. Here, we consider a hypothetical Manhattan Office building purchased in year T and sold in year T+10. By roughly estimating and then forecasting the Net Operating Income and the Exit Cap Rate, we are able to determine possible ROI and subsequently Value-at-Risk.
+Your typical Commercial Real Estate underwriting model (Office, Retail, Residential, Industrial) will include numerous assumptions about the value of the asset and the future movements of the market. For example: - The exit cap at year 10 will be `4.5%` - The cost of sale will be `4.0%` - You annual management fees will amount to `3%` of GPI - Rent growth will be `4%` per year and vacancy will remain at `8%` - etc.
+
+How these assumptions are produced is an alchemy of analysis, industry experience and "what looks right"-ness. Estimating assumptions is a difficult "art-more-than-science" endevour and can make or break an investment decision.
+
+One way to enhance the investment decision making process is to introduce the concept of *quantified uncertainty* to the equation. Borrowing from statistics, we can replace point estimate assumptions with mean-value estimates and confidence intervals. An `8%` vacancy rate becomes a mean of `8%` with a standard-deviation of `0.12` and a `95% confidencec interval` of `7.88%` to `8.24%`, for example.
+
+What this allows us to do is generate ranges of probable outcomes for many assumptions. We can then simulate many potential future states, based on combinations of assumption probabilities, and produce likelihoods for things like exit caps, sale price, IRR, ROI and more. We're also able to answer the question: How likely am I to make money on this investment?
+
+We are going to combine univariate forecasts of some top-level assumptions with Monte Carlo simulation to generate a range of probable IRR's for a hypothetical Manhattan Office investment.
 
 ``` r
 rm(list=ls())
@@ -23,6 +31,8 @@ set.seed(608)
 User Inputs
 ===========
 
+Let us define our hypothetical investment as an Office Building purchased for `$31.5M` in year T with the intent of selling the building at year T+10. The building currently generates `$1.2M` in operating income. We will also set our number of simulations to 10,000.
+
 ``` r
 # a fictitious purchase price
 purchase_price <- 31500000
@@ -31,11 +41,13 @@ purchase_price <- 31500000
 year_hold <- 10
 
 # current year NOI
-current_NOI <- 3500000
+current_NOI <- 1200000
 
 # input the number simulations to run
 n_sims <- 10000
 ```
+
+Our hypothetical purchase cap rate is 3.81%.
 
 Exit Caps
 =========
@@ -320,8 +332,8 @@ sale_price_sim <- exit_year_noi_sim/exit_caps_sim
 summary(sale_price_sim)
 ```
 
-    ##      Min.   1st Qu.    Median      Mean   3rd Qu.      Max. 
-    ##  60421737  98652874 110638348 112795987 124251143 244027680
+    ##     Min.  1st Qu.   Median     Mean  3rd Qu.     Max. 
+    ## 20716024 33823843 37933148 38672910 42600392 83666633
 
 ``` r
 sale_price_sim %>% 
