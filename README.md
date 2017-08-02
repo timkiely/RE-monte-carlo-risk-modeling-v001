@@ -1,24 +1,27 @@
 Commerical Real Estate Investment Risk Analysis using Monte Carlo Simulation
 ================
 
-Your typical Commercial Real Estate underwriting model (Office, Retail, Residential, Industrial) will include numerous assumptions about the value of the asset and the future movements of the market. For example: - The exit cap at year 10 will be `4.5%` - The cost of sale will be `4.0%` - You annual management fees will amount to `3%` of GPI - Rent growth will be `4%` per year and vacancy will remain at `8%` - etc.
+Your typical Commercial Real Estate underwriting model (Office, Retail, Residential, Industrial) will include numerous assumptions about the value of the asset and the future movements of the market. For example:
+
+-   The exit cap at year 10 will be `4.5%`
+-   The cost of sale will be `4.0%`
+-   You annual management fees will amount to `3%` of GPI
+-   Rent growth will be `4%` per year and vacancy will remain at `8%`
+-   etc.
 
 How these assumptions are produced is an alchemy of analysis, industry experience and "what looks right"-ness. Estimating assumptions is a difficult "art-more-than-science" endevour and can make or break an investment decision.
 
-One way to enhance the investment decision making process is to introduce the concept of *quantified uncertainty* to the equation. Borrowing from statistics, we can replace point estimate assumptions with mean-value estimates and confidence intervals. An `8%` vacancy rate becomes a mean of `8%` with a standard-deviation of `0.12` and a `95% confidencec interval` of `7.88%` to `8.24%`, for example.
+One way to enhance the investment decision making process is to introduce the concept of *quantified uncertainty* to the equation. Borrowing from statistics, we can replace point estimate assumptions with mean-value estimates and confidence intervals. An `8%` vacancy rate becomes a mean of `8%` with a standard-deviation of `0.12` and a `95% confidence interval` of `7.88%` to `8.24%`, for example.
 
-What this allows us to do is generate ranges of probable outcomes for many assumptions. We can then simulate many potential future states, based on combinations of assumption probabilities, and produce likelihoods for things like exit caps, sale price, IRR, ROI and more. We're also able to answer the question: How likely am I to make money on this investment?
+What this allows us to do is generate ranges of probable outcomes for many assumptions. For example, this graph might represent a range of possible exit caps:
 
-We are going to combine univariate forecasts of some top-level assumptions with Monte Carlo simulation to generate a range of probable IRR's for a hypothetical Manhattan Office investment.
+![](README_files/figure-markdown_github/unnamed-chunk-1-1.png)
+
+With ranges of potential assumption values, we can then simulate many potential future states based on combinations of assumption probabilities. This results in likelihood ranges for things like exit caps, sale price, IRR, ROI and more. We're also able to answer the question: How likely am I to make money on this investment?
+
+We are going to combine univariate forecasts of some top-level underwriting assumptions with Monte Carlo simulation to generate a range of probable IRR's for a hypothetical Manhattan Office investment.
 
 ``` r
-rm(list=ls())
-knitr::opts_chunk$set(
-    echo = TRUE,
-    message = FALSE,
-    warning = FALSE
-)
-
 library(tidyverse)
 library(stringr)
 library(forecast)
@@ -99,7 +102,7 @@ cap_rate_means %>%
   geom_line(size = 2, color = "black")
 ```
 
-![](README_files/figure-markdown_github/unnamed-chunk-3-1.png)
+![](README_files/figure-markdown_github/unnamed-chunk-5-1.png)
 
 ``` r
 # forecasting exit cap rates 10 years
@@ -109,7 +112,7 @@ cap_for <- forecast(cap_rate_means_ts, model = mod, h = 12*year_hold)
 plot(cap_for)
 ```
 
-![](README_files/figure-markdown_github/unnamed-chunk-4-1.png)
+![](README_files/figure-markdown_github/unnamed-chunk-6-1.png)
 
 ``` r
 # extract the point forecasts into a dataframe
@@ -134,7 +137,7 @@ cap_forc_data %>%
   theme_minimal()
 ```
 
-![](README_files/figure-markdown_github/unnamed-chunk-5-1.png)
+![](README_files/figure-markdown_github/unnamed-chunk-7-1.png)
 
 Forecasting Rent Growth
 =======================
@@ -184,7 +187,7 @@ office_rents %>%
        , x = NULL)
 ```
 
-![](README_files/figure-markdown_github/unnamed-chunk-7-1.png)
+![](README_files/figure-markdown_github/unnamed-chunk-9-1.png)
 
 Forecasting cumulative rent growth over 10 years
 ------------------------------------------------
@@ -197,7 +200,7 @@ fcast <- forecast(fit, method="naive", h = 4*year_hold)
 plot(fcast)
 ```
 
-![](README_files/figure-markdown_github/unnamed-chunk-8-1.png)
+![](README_files/figure-markdown_github/unnamed-chunk-10-1.png)
 
 ``` r
 # extract the point forecasts into a dataframe
@@ -229,7 +232,7 @@ rent_forc_data %>%
   theme_minimal()
 ```
 
-![](README_files/figure-markdown_github/unnamed-chunk-9-1.png)
+![](README_files/figure-markdown_github/unnamed-chunk-11-1.png)
 
 Generating simulations
 ======================
@@ -263,7 +266,7 @@ exit_caps_sim %>%
        , x = "Exit Cap Rates")
 ```
 
-![](README_files/figure-markdown_github/unnamed-chunk-11-1.png)
+![](README_files/figure-markdown_github/unnamed-chunk-13-1.png)
 
 Simulation of rent growth:
 --------------------------
@@ -294,7 +297,7 @@ exit_year_rents_sim %>%
        , x = "Rent Growth")
 ```
 
-![](README_files/figure-markdown_github/unnamed-chunk-13-1.png)
+![](README_files/figure-markdown_github/unnamed-chunk-15-1.png)
 
 Simulation of NOI:
 ------------------
@@ -321,7 +324,7 @@ exit_year_noi_sim  %>%
          , x = "NOI ($ Millions)")
 ```
 
-![](README_files/figure-markdown_github/unnamed-chunk-14-1.png)
+![](README_files/figure-markdown_github/unnamed-chunk-16-1.png)
 
 Simulation of sales price
 -------------------------
@@ -353,7 +356,7 @@ sale_price_sim %>%
          , x = "Exit Sale Price")
 ```
 
-![](README_files/figure-markdown_github/unnamed-chunk-15-1.png)
+![](README_files/figure-markdown_github/unnamed-chunk-17-1.png)
 
 Simualtion of Return On Investment
 ==================================
@@ -378,6 +381,6 @@ ROI %>%
        , x = "10 Year ROI")
 ```
 
-![](README_files/figure-markdown_github/unnamed-chunk-16-1.png)
+![](README_files/figure-markdown_github/unnamed-chunk-18-1.png)
 
 Of course, it wouldn't take much additional work to calculate probable IRR's or other investment metrics.

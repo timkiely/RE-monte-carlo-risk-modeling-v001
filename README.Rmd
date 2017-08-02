@@ -3,29 +3,77 @@ title: "Commerical Real Estate Investment Risk Analysis using Monte Carlo Simula
 output: github_document
 ---
 
-Your typical Commercial Real Estate underwriting model (Office, Retail, Residential, Industrial) will include numerous assumptions about the value of the asset and the future movements of the market. For example:
-- The exit cap at year 10 will be `4.5%`
-- The cost of sale will be `4.0%`
-- You annual management fees will amount to `3%` of GPI
-- Rent growth will be `4%` per year and vacancy will remain at `8%`
-- etc.
-
-How these assumptions are produced is an alchemy of analysis, industry experience and "what looks right"-ness. Estimating assumptions is a difficult "art-more-than-science" endevour and can make or break an investment decision. 
-
-One way to enhance the investment decision making process is to introduce the concept of *quantified uncertainty* to the equation. Borrowing from statistics, we can replace point estimate assumptions with mean-value estimates and confidence intervals. An `8%` vacancy rate becomes a mean of `8%` with a standard-deviation of `0.12` and a `95% confidencec interval` of `7.88%` to `8.24%`, for example.
-
-What this allows us to do is generate ranges of probable outcomes for many assumptions. We can then simulate many potential future states, based on combinations of assumption probabilities, and produce likelihoods for things like exit caps, sale price, IRR, ROI and more. We're also able to answer the question: How likely am I to make money on this investment? 
-
-We are going to combine univariate forecasts of some top-level assumptions with Monte Carlo simulation to generate a range of probable IRR's for a hypothetical Manhattan Office investment. 
 
 
-```{r setup, include=TRUE, message = FALSE, warning=FALSE}
+```{r setup, include=FALSE, message = FALSE, warning=FALSE, eval = T}
 rm(list=ls())
 knitr::opts_chunk$set(
 	echo = TRUE,
 	message = FALSE,
-	warning = FALSE
+	warning = FALSE, 
+	fig.width = 10,
+	fig.height = 8
 )
+
+```
+
+Your typical Commercial Real Estate underwriting model (Office, Retail, Residential, Industrial) will include numerous assumptions about the value of the asset and the future movements of the market. For example:
+
+* The exit cap at year 10 will be `4.5%`
+* The cost of sale will be `4.0%`
+* You annual management fees will amount to `3%` of GPI
+* Rent growth will be `4%` per year and vacancy will remain at `8%`
+* etc.
+
+How these assumptions are produced is an alchemy of analysis, industry experience and "what looks right"-ness. Estimating assumptions is a difficult "art-more-than-science" endevour and can make or break an investment decision. 
+
+One way to enhance the investment decision making process is to introduce the concept of *quantified uncertainty* to the equation. Borrowing from statistics, we can replace point estimate assumptions with mean-value estimates and confidence intervals. An `8%` vacancy rate becomes a mean of `8%` with a standard-deviation of `0.12` and a `95% confidence interval` of `7.88%` to `8.24%`, for example.
+
+What this allows us to do is generate ranges of probable outcomes for many assumptions. For example, this graph might represent a range of possible exit caps:
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(forecast)
+set.seed(1989)
+cap_data <- data_frame("exit cap" = seq(0,0.99,by=0.01)+rnorm(100,3.8,0.1)
+                       , "Date" = seq.Date(from=as.Date("2009-01-01"),as.Date("2017-04-01"),"month")
+                       , "type" = "known"
+                       )
+forcast_cap_data <- 
+  ts(cap_data$`exit cap`
+     , start = c(2009,1)
+     , end = c(2017,4)
+     , frequency = 12) %>%
+  auto.arima() %>% 
+  forecast(h=50) %>%
+  as.data.frame() %>% 
+  mutate(type = "forecast"
+         ,`forcasted exit cap` = `Point Forecast`
+         , "Date" = seq.Date(from=as.Date("2017-05-01"),as.Date("2021-06-01"),"month")
+  )
+
+bind_rows(cap_data, forcast_cap_data) %>% 
+  ggplot()+
+  aes(x = Date, y = `exit cap`)+
+  geom_ribbon(aes(ymin = `Lo 95`, ymax = `Hi 95`), alpha = 1, fill = "#F0F0F0")+
+  geom_ribbon(aes(ymin = `Lo 80`, ymax = `Hi 80`), alpha = 1, fill = "#D2D2D2")+
+  geom_smooth(span = 0.1, se = F, method = 'loess', formula = 'y ~ x', color = "#008FD5", size = 1.5)+
+  geom_point(aes(color = type))+
+  geom_line(aes(y = `forcasted exit cap`), color = "#2CA02C", size = 1.3, linetype = 2)+
+  theme_minimal()+
+  theme(legend.position = "none")+
+  labs(title = "Hypothetical exit cap rates and forecasts"
+       , x = NULL)
+
+```
+
+
+With ranges of potential assumption values, we can then simulate many potential future states based on combinations of assumption probabilities. This results in likelihood ranges for things like exit caps, sale price, IRR, ROI and more. We're also able to answer the question: How likely am I to make money on this investment? 
+
+We are going to combine univariate forecasts of some top-level underwriting assumptions with Monte Carlo simulation to generate a range of probable IRR's for a hypothetical Manhattan Office investment. 
+
+
+```{r}
 
 library(tidyverse)
 library(stringr)
