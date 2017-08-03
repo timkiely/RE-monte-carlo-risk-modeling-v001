@@ -416,19 +416,121 @@ ROI %>%
 Unlevered IRR
 =============
 
+Putting it all together, we can simulate theoretical cash flows over all of our simulations and calculate an IRR for each. The output is a distribution of possible IRR's for a given deal given starting NOI and purchase price over a ten year hold period.
+
 ``` r
-IRR <- function (cash_floow) {
-  n <- length(cf)
-  subcf <- cf[2:n]
-  uniroot(function(r) -1 * pv.uneven(r, subcf) + cf[1]
+# this function computes IRR
+
+IRR <- function (cash_flow) {
+  
+  pv.simple <- function (r, n, fv) return((fv/(1 + r)^n) * (-1))
+  
+  pv.uneven <- function (r, cf) {
+    n <- length(cf)
+    sum <- 0
+    for (i in 1:n) {
+      sum <- sum + pv.simple(r, i, cf[i])
+    }
+    return(sum)
+  }
+  
+  n <- length(cash_flow)
+  subcf <- cash_flow[2:n]
+  uniroot(function(r) -1 * pv.uneven(r, subcf) + cash_flow[1]
           , interval = c(1e-10, 1e+10)
           , extendInt = "yes")$root
 }
-
-# for(i in 1:n_sims){
-#   
-#   cash_flow <- 
-# }
-#IRR()
-# Cash_Flows <- c((-1*purchase_price), 
 ```
+
+Generate NOIs for year T to T+10
+
+``` r
+# condense rent forecasts to yearly:
+rent_forc_data_yearly <-
+  rent_forc_data %>% 
+  mutate(Year = lubridate::year(YearMonth)) %>% 
+  group_by(Year) %>% 
+  summarise(Mean_rent = mean(Mean_rent, na.rm = T)
+            ,SD_rent = mean(SD_rent, na.rm = T)
+            ,Lower_bound = mean(Lower_bound, na.rm = T)
+            ,Upper_bound = mean(Upper_bound, na.rm = T)
+            ) %>% 
+  filter(Year!=2027)
+
+# starting year 0 with the purchase price:
+NOI_Mat <- data_frame("Year_0" = rep(-1*purchase_price, times = n_sims))
+
+# for every year for forecasted rent growth, calculate a probable NOI:
+for(year in 1:nrow(rent_forc_data_yearly)){
+    year_t <- rent_forc_data %>% filter(row_number()==year)
+    year_t_cgr <- rnorm(n = n_sims, mean = year_t$Mean_rent, sd = abs(year_t$SD_rent))
+    year_t_NOI <- data_frame(current_NOI + (current_NOI * year_t_cgr))
+    names(year_t_NOI) <- paste0("Year_",year)
+    NOI_Mat <- bind_cols(NOI_Mat,year_t_NOI)
+}
+
+# we'll assume that in year 10, we collect NOI as well as sell the property:
+sale_price_sim <- exit_year_noi_sim/exit_caps_sim
+NOI_Mat$Year_10 <- NOI_Mat$Year_10+sale_price_sim
+
+head(NOI_Mat)
+```
+
+    ## # A tibble: 6 x 11
+    ##      Year_0  Year_1  Year_2  Year_3  Year_4  Year_5  Year_6    Year_7
+    ##       <dbl>   <dbl>   <dbl>   <dbl>   <dbl>   <dbl>   <dbl>     <dbl>
+    ## 1 -31500000 2710200 2212145 2782856 1510110 2145488 2314575 2147745.7
+    ## 2 -31500000 3461208 2034560 2185865 1718766 2161735 2166230  650915.0
+    ## 3 -31500000 2403579 2115229 1898906 1117627 2198728 2292104  352541.3
+    ## 4 -31500000 2480998 2003821 2699094 1729198 2056147 2364487  640361.3
+    ## 5 -31500000 2213582 2007102 2695110  776585 2128837 2504483 1754267.5
+    ## 6 -31500000 2137601 2142499 2558708 1762329 2119933 2232987 1787973.7
+    ## # ... with 3 more variables: Year_8 <dbl>, Year_9 <dbl>, Year_10 <dbl>
+
+Compute IRR:
+------------
+
+``` r
+IRR_byrow <- function(row) IRR(as.numeric(row))
+
+NOI_Mat$IRR <- apply(NOI_Mat, 1, IRR_byrow)
+
+head(NOI_Mat)
+```
+
+    ## # A tibble: 6 x 12
+    ##      Year_0  Year_1  Year_2  Year_3  Year_4  Year_5  Year_6    Year_7
+    ##       <dbl>   <dbl>   <dbl>   <dbl>   <dbl>   <dbl>   <dbl>     <dbl>
+    ## 1 -31500000 2710200 2212145 2782856 1510110 2145488 2314575 2147745.7
+    ## 2 -31500000 3461208 2034560 2185865 1718766 2161735 2166230  650915.0
+    ## 3 -31500000 2403579 2115229 1898906 1117627 2198728 2292104  352541.3
+    ## 4 -31500000 2480998 2003821 2699094 1729198 2056147 2364487  640361.3
+    ## 5 -31500000 2213582 2007102 2695110  776585 2128837 2504483 1754267.5
+    ## 6 -31500000 2137601 2142499 2558708 1762329 2119933 2232987 1787973.7
+    ## # ... with 4 more variables: Year_8 <dbl>, Year_9 <dbl>, Year_10 <dbl>,
+    ## #   IRR <dbl>
+
+``` r
+NOI_Mat$IRR %>% summary()
+```
+
+    ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
+    ## 0.05391 0.08553 0.09314 0.09398 0.10146 0.16121
+
+``` r
+NOI_Mat %>% 
+  mutate(bucket = round(IRR,2)) %>% 
+  group_by(bucket) %>% 
+  summarise(count = n()) %>% 
+  mutate(Probability = count/sum(count)) %>% 
+  ggplot()+
+  aes(x = bucket, y = Probability)+
+  geom_col(fill ="#FF2700")+
+  scale_x_continuous(labels = scales::percent)+
+  scale_y_continuous(labels = scales::percent)+
+  theme_minimal()+
+  labs(title = "Unlevered IRRs Distribution:"
+       , x = "Unlevered IRR")
+```
+
+![](README_files/figure-markdown_github/unnamed-chunk-21-1.png)
