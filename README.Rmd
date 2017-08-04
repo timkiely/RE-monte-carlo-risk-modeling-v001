@@ -442,6 +442,8 @@ ROI %>%
 
 Putting it all together, we can simulate theoretical cash flows over all of our simulations and calculate an IRR for each. The output is a distribution of possible IRR's for a given deal given starting NOI and purchase price over a ten year hold period. 
 
+This part is particularly cumbersome in terms of computation time. The formula for IRR involves searching through possible discount rates until the one that makes the NPV tend to zero is found, making a bottleneck of sorts. 
+
 ```{r}
 
 # this function computes IRR
@@ -502,7 +504,7 @@ head(NOI_Mat)
 ```
 
 
-## Compute IRR:
+## Compute IRRs:
 ```{r}
 IRR_byrow <- function(row) IRR(as.numeric(row))
 
