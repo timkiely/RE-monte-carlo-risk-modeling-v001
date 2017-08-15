@@ -244,8 +244,8 @@ head(office_rents)
     ## 5  1997-07-01                       28.40  0.008522727   0.02732931
     ## 6  1997-10-01                       29.86  0.051408451   0.07873776
 
-Visualizig office rent growth
------------------------------
+Visualizing office rent growth
+------------------------------
 
 ``` r
 office_rents %>% 
@@ -265,7 +265,7 @@ office_rents %>%
 Forecasting cumulative rent growth over 10 years
 ------------------------------------------------
 
-We apply another univariate forecast to the rent growth rate in order to produce a cumulative 10-year rent growth rate forecast. Again, this is an embarrisingly oversimplified version of forecasting.
+We apply another univariate forecast to the rent growth rate in order to produce a cumulative 10-year rent growth rate forecast. Again, this is an embarrassingly oversimplified version of forecasting.
 
 ``` r
 ts(office_rents$Cumlative_RG, start = c(1996,3), end = c(2017,2), frequency = 4) %>% 
@@ -436,7 +436,7 @@ sale_price_sim %>%
 ROI
 ===
 
-While real estate professionals speak the language of NOI and Cap Rates, investemnent committees and CIOs think in terms of Value-At-Risk, ROI and Volatility. Using our distributions technique, we can transalte real estate jargon into probabalistic terms that investors understand.
+While real estate professionals speak the language of NOI and Cap Rates, investment committees and CIOs think in terms of Value-At-Risk, ROI and Volatility. Using our distributions technique, we can translate real estate jargon into probabilistic terms that investors understand.
 
 A simple ROI calculation (with no discounts applied):
 
@@ -525,7 +525,7 @@ sale_price_sim <- exit_year_noi_sim/exit_caps_sim
 Cash_Flows$Year_10 <- Cash_Flows$Year_10+sale_price_sim
 ```
 
-And here's what our simulated cash flows look like (this should look familiar to those experienced with CRE modeling). Note how the cash flows vary slighly from one simulation to the next.
+And here's what our simulated cash flows look like (this should look familiar to those experienced with CRE modeling). Note how the cash flows vary slightly from one simulation to the next.
 
 ``` r
 head(Cash_Flows)

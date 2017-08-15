@@ -268,7 +268,7 @@ head(office_rents)
 
 
 
-## Visualizig office rent growth
+## Visualizing office rent growth
 
 ```{r}
 office_rents %>% 
@@ -286,7 +286,7 @@ office_rents %>%
 
 ## Forecasting cumulative rent growth over 10 years
 
-We apply another univariate forecast to the rent growth rate in order to produce a cumulative 10-year rent growth rate forecast. Again, this is an embarrisingly oversimplified version of forecasting. 
+We apply another univariate forecast to the rent growth rate in order to produce a cumulative 10-year rent growth rate forecast. Again, this is an embarrassingly oversimplified version of forecasting. 
 
 ```{r}
 
@@ -456,7 +456,7 @@ sale_price_sim %>%
 
 # ROI
 
-While real estate professionals speak the language of NOI and Cap Rates, investemnent committees and CIOs think in terms of Value-At-Risk, ROI and Volatility. Using our distributions technique, we can transalte real estate jargon into probabalistic terms that investors understand. 
+While real estate professionals speak the language of NOI and Cap Rates, investment committees and CIOs think in terms of Value-At-Risk, ROI and Volatility. Using our distributions technique, we can translate real estate jargon into probabilistic terms that investors understand. 
 
 A simple ROI calculation (with no discounts applied):
 
@@ -546,7 +546,7 @@ sale_price_sim <- exit_year_noi_sim/exit_caps_sim
 Cash_Flows$Year_10 <- Cash_Flows$Year_10+sale_price_sim
 ```
 
-And here's what our simulated cash flows look like (this should look familiar to those experienced with CRE modeling). Note how the cash flows vary slighly from one simulation to the next.
+And here's what our simulated cash flows look like (this should look familiar to those experienced with CRE modeling). Note how the cash flows vary slightly from one simulation to the next.
 
 ```{r}
 head(Cash_Flows)
