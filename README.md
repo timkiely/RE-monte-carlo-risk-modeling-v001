@@ -1,5 +1,7 @@
-Commerical Real Estate Investment Risk Analysis using Monte Carlo Simulation
+Enhancing Commerical Real Estate Investment Risk Analysis
 ================
+
+#### An application of Monte Carlo Simulation to underwriting assumptions
 
 Your typical Commercial Real Estate underwriting model (Office, Retail, Residential, Industrial) will include numerous assumptions about the value of the asset and the future movements of the market. For example:
 
@@ -9,19 +11,27 @@ Your typical Commercial Real Estate underwriting model (Office, Retail, Resident
 -   Rent growth will be `4%` per year and vacancy will remain at `8%`
 -   etc.
 
-How these assumptions are produced is an alchemy of analysis, industry experience and "what looks right"-ness. Estimating assumptions is a difficult "art-more-than-science" endevour and can make or break an investment decision.
+How these assumptions are produced is an alchemy of analysis, industry experience and what I've come to call "what looks right"-ness. Estimating assumptions is a difficult "art-more-than-science" endevour and can make or break an investment decision.
 
-One way to enhance the investment decision making process is to introduce the concept of *quantified uncertainty* to the equation. Borrowing from statistics, we can replace point estimate assumptions with mean-value estimates and confidence intervals. An `8%` vacancy rate becomes a mean of `8%` with a standard-deviation of `0.12` and a `95% confidence interval` of `7.88%` to `8.24%`, for example.
+Enhancing the Underwriting Assumptions:
+=======================================
+
+One way to enhance the investment decision making process is to introduce the concept of **quantified uncertainty** to the underwriting assumptions.
+
+Borrowing from statistics, we can **replace point estimates with mean-value estimates and confidence intervals**. That is, an assumption of `8%` vacancy instead becomes a `mean of 8%` with a `standard-deviation of 0.12` and a `95% confidence interval of 7.88% to 8.24%`.
 
 What this allows us to do is generate ranges of probable outcomes for many assumptions. For example, this graph might represent a range of possible exit caps:
 
 ![](README_files/figure-markdown_github/unnamed-chunk-1-1.png)
 
-With ranges of potential assumption values, we can then simulate many potential future states based on combinations of assumption probabilities. This results in likelihood ranges for things like exit caps, sale price, IRR, ROI and more, for example:
+With ranges of assumption values, we can then simulate thousands of potential future states based on varying probabilities of combinations of assumptions. The outputs are likelihood distributions for things like exit caps, sale prices, IRRs, ROIs and more.
 
 ![Unlevered IRR Ranges](img/unlevered-irr.png)
 
 We're also able to answer the all important question: How likely am I to lose money on this investment?
+
+Example
+=======
 
 We are going to combine univariate forecasts of some top-level underwriting assumptions with Monte Carlo simulation to generate a range of probable IRR's for a hypothetical Manhattan Office investment.
 
@@ -30,15 +40,13 @@ library(tidyverse)
 library(stringr)
 library(forecast)
 library(zoo)
-
-
 set.seed(608)
 ```
 
 User Inputs
 ===========
 
-Let us define our hypothetical investment as an Office Building purchased for `$31.5M` in year T with the intent of selling the building at year T+10. The building currently generates `$1.2M` in operating income. We will also set our number of simulations to 10,000.
+Let us define our hypothetical investment as an Office Building purchased for `$31.5M` in year T with the intent of selling the building at year T+10. The building currently generates `$1.2M` in operating income. We will also set our number of simulations to 10,000 (note that the final IRR calculation can be somewhat slow, so increase the number of simulations only as needed).
 
 ``` r
 # a fictitious purchase price
@@ -59,7 +67,7 @@ Our hypothetical purchase cap rate is 3.81%.
 Exit Caps
 =========
 
-We will be using a sample of cap rates pulled from [RCA](https://www.rcanalytics.com/) to create a forecast of potential exit caps at year 10.
+We will be using a sample of cap rates pulled from [Real Capital Analytics](https://www.rcanalytics.com/) to create a forecast of potential exit caps at year 10.
 
 ``` r
 # Exit Cap data from RCA
@@ -84,10 +92,43 @@ head(manhat_office_caps)
     ## 5 0.05217554 2017-05-05  2017     5 2017-05-01
     ## 6 0.04900000 2017-04-05  2017     4 2017-04-01
 
+The distribution of actual terminal cap rates looks like this:
+
+``` r
+manhat_office_caps %>% 
+  ggplot()+
+  aes(x = `Cap Rate`)+
+  geom_histogram(binwidth = 0.001)+
+  theme_minimal()+
+  theme(legend.position = "none")+
+  scale_x_continuous(labels = scales::percent)+
+  labs(title = "Sample of Manhattan Office Terminal Cap Rates"
+       , subtitle = "2007 to 2017"
+       , x = NULL)
+```
+
+![](README_files/figure-markdown_github/unnamed-chunk-5-1.png)
+
+``` r
+manhat_office_caps %>% 
+  ggplot()+
+  aes(x = Date, y = `Cap Rate`)+
+  geom_point()+
+  geom_smooth()+
+  theme_minimal()+
+  theme(legend.position = "none")+
+  scale_y_continuous(labels = scales::percent)+
+  labs(title = "Sample of Manhattan Office Terminal Cap Rates"
+       , subtitle = "2007 to 2017"
+       , x = "Date of Sale")
+```
+
+![](README_files/figure-markdown_github/unnamed-chunk-6-1.png)
+
 Forecasting exit cap rates out 10 years
 ---------------------------------------
 
-Since we want to sell at year 10, we would normally need to forecast to year 11 (purchase prict would be based on T+10+1 cap rate). However to simplify things we will only forecast 10 year exit caps.
+Since we want to sell at year 10, we would normally need to forecast to year 11 (purchase price would be based on T+10+1 cap rate and NOI). However to simplify things we will only forecast 10 year exit caps.
 
 ``` r
 # calculate the mean and standard deviation of cap rates:
@@ -112,7 +153,7 @@ cap_rate_means %>%
   labs(title = "Average Office Cap Rates with Standard Deviations")
 ```
 
-![](README_files/figure-markdown_github/unnamed-chunk-5-1.png)
+![](README_files/figure-markdown_github/unnamed-chunk-7-1.png)
 
 Next we apply a basic univariate forecasting technique. It's important to note that forecasting requires much more care than this, and predictive models can be built and validated in any number of ways. For a great resource on forecasting, see [Rob J Hyndman's Forecasting: principles and practice](https://www.otexts.org/fpp).
 
@@ -132,7 +173,9 @@ ts(cap_rate_means$Mean_cap
   plot(main = "Forecasting Exit Cap Rates")
 ```
 
-![](README_files/figure-markdown_github/unnamed-chunk-6-1.png)
+![](README_files/figure-markdown_github/unnamed-chunk-8-1.png)
+
+And here is what our forecasted cap rate data looks like:
 
 ``` r
 # extract the point forecasts into a dataframe
@@ -217,12 +260,12 @@ office_rents %>%
        , x = NULL)
 ```
 
-![](README_files/figure-markdown_github/unnamed-chunk-9-1.png)
+![](README_files/figure-markdown_github/unnamed-chunk-11-1.png)
 
 Forecasting cumulative rent growth over 10 years
 ------------------------------------------------
 
-We apply another univariate forecast to the rent growth rate in order to produce a cumulative 10-year rent growth rate forecast.
+We apply another univariate forecast to the rent growth rate in order to produce a cumulative 10-year rent growth rate forecast. Again, this is an embarrisingly oversimplified version of forecasting.
 
 ``` r
 ts(office_rents$Cumlative_RG, start = c(1996,3), end = c(2017,2), frequency = 4) %>% 
@@ -232,7 +275,9 @@ ts(office_rents$Cumlative_RG, start = c(1996,3), end = c(2017,2), frequency = 4)
   plot(main = "Forecasting cumulative rent growth")
 ```
 
-![](README_files/figure-markdown_github/unnamed-chunk-10-1.png)
+![](README_files/figure-markdown_github/unnamed-chunk-12-1.png)
+
+And we'll quickly clean the data and make is usable in our final simulation:
 
 ``` r
 # extract the point forecasts into a datafram
@@ -264,7 +309,7 @@ rent_forc_data <-
 Monte Carlo Simulations
 =======================
 
-Now that we have our forecasts (with confidence intervals), we run several thousand simulations reflecting the varying possible combinations of assumption values.
+Now that we have our forecasts (with confidence intervals), we need to combine the assumptions into a usable estimates. To do this, we run several thousand simulations. In each iteration, we sample a value for each of our assumptions, then combine them to create various risk metrics.
 
 ``` r
 # isolate the exit year:
@@ -297,7 +342,7 @@ exit_caps_sim %>%
        , x = "Exit Cap Rates")
 ```
 
-![](README_files/figure-markdown_github/unnamed-chunk-13-1.png)
+![](README_files/figure-markdown_github/unnamed-chunk-15-1.png)
 
 Simulation of rent growth:
 --------------------------
@@ -328,12 +373,14 @@ exit_year_rents_sim %>%
        , x = "Rent Growth")
 ```
 
-![](README_files/figure-markdown_github/unnamed-chunk-14-1.png)
+![](README_files/figure-markdown_github/unnamed-chunk-16-1.png)
 
 Simulation of NOI:
 ------------------
 
-We use rent growth to calculate exit year NOI, which we find has a ~14% chance to be between `$2.075` and `$2.1` million dollars:
+We use rent growth to calculate exit year NOI, which we find has a ~14% chance to be between `$2.075` and `$2.1` million dollars.
+
+Of course, it's neither fair nor advisable to base NOI growth solely on rent growth (even though those two things correlate strongly). Ideally, we would have a better idea of expenses, including taxes, financing costs, etc.
 
 ``` r
 exit_year_noi_sim <- (exit_year_rents_sim*current_NOI)+current_NOI
@@ -357,10 +404,10 @@ exit_year_noi_sim  %>%
          , x = "NOI ($ Millions)")
 ```
 
-![](README_files/figure-markdown_github/unnamed-chunk-15-1.png)
+![](README_files/figure-markdown_github/unnamed-chunk-17-1.png)
 
-Simulation of sales price
--------------------------
+Combining Exit Cap and NOI to get Terminal Sale Price
+-----------------------------------------------------
 
 Finally, we combine exit-year cap rates with NOI to generate potential sale prices. There is a ~35% chance of selling between 40-45 million dollars:
 
@@ -384,10 +431,12 @@ sale_price_sim %>%
          , x = "Exit Sale Price")
 ```
 
-![](README_files/figure-markdown_github/unnamed-chunk-16-1.png)
+![](README_files/figure-markdown_github/unnamed-chunk-18-1.png)
 
 ROI
 ===
+
+While real estate professionals speak the language of NOI and Cap Rates, investemnent committees and CIOs think in terms of Value-At-Risk, ROI and Volatility. Using our distributions technique, we can transalte real estate jargon into probabalistic terms that investors understand.
 
 A simple ROI calculation (with no discounts applied):
 
@@ -411,17 +460,17 @@ ROI %>%
        , x = "10 Year ROI")
 ```
 
-![](README_files/figure-markdown_github/unnamed-chunk-17-1.png)
+![](README_files/figure-markdown_github/unnamed-chunk-19-1.png)
 
 Unlevered IRR
 =============
 
-Putting it all together, we can simulate theoretical cash flows over all of our simulations and calculate an IRR for each. The output is a distribution of possible IRR's for a given deal given starting NOI and purchase price over a ten year hold period.
+Putting it all together, we can simulate theoretical cash flows over all of our simulations and calculate an IRR for each. The output is a distribution of possible IRR's for a given deal given a starting NOI and a purchase price over a ten year hold period.
 
-This part is particularly cumbersome in terms of computation time. The formula for IRR involves searching through possible discount rates until the one that makes the NPV tend to zero is found, making a bottleneck of sorts.
+Note: the formula I've written below for IRR involves iterating through possible discount rates until the one that makes the NPV tend to zero is found. That makes it particularly slow when doing multiple thousands of these in a row.
 
 ``` r
-# this function computes IRR
+# this function computes IRR:
 
 IRR <- function (cash_flow) {
   
@@ -460,7 +509,7 @@ rent_forc_data_yearly <-
   filter(Year!=2027)
 
 # starting year 0 with the purchase price:
-NOI_Mat <- data_frame("Year_0" = rep(-1*purchase_price, times = n_sims))
+Cash_Flows <- data_frame("Year_0" = rep(-1*purchase_price, times = n_sims))
 
 # for every year for forecasted rent growth, calculate a probable NOI:
 for(year in 1:nrow(rent_forc_data_yearly)){
@@ -468,14 +517,18 @@ for(year in 1:nrow(rent_forc_data_yearly)){
     year_t_cgr <- rnorm(n = n_sims, mean = year_t$Mean_rent, sd = abs(year_t$SD_rent))
     year_t_NOI <- data_frame(current_NOI + (current_NOI * year_t_cgr))
     names(year_t_NOI) <- paste0("Year_",year)
-    NOI_Mat <- bind_cols(NOI_Mat,year_t_NOI)
+    Cash_Flows <- bind_cols(Cash_Flows,year_t_NOI)
 }
 
 # we'll assume that in year 10, we collect NOI as well as sell the property:
 sale_price_sim <- exit_year_noi_sim/exit_caps_sim
-NOI_Mat$Year_10 <- NOI_Mat$Year_10+sale_price_sim
+Cash_Flows$Year_10 <- Cash_Flows$Year_10+sale_price_sim
+```
 
-head(NOI_Mat)
+And here's what our simulated cash flows look like (this should look familiar to those experienced with CRE modeling). Note how the cash flows vary slighly from one simulation to the next.
+
+``` r
+head(Cash_Flows)
 ```
 
     ## # A tibble: 6 x 11
@@ -489,39 +542,48 @@ head(NOI_Mat)
     ## 6 -31500000 2137601 2142499 2558708 1762329 2119933 2232987 1787973.7
     ## # ... with 3 more variables: Year_8 <dbl>, Year_9 <dbl>, Year_10 <dbl>
 
-Compute IRRs:
--------------
+Here's what 10,000 cash flow simulations looks like plotted:
 
 ``` r
+Cash_Flows %>% 
+  mutate(simulation = n():1) %>% 
+  gather(Year,Value,-simulation) %>% 
+  mutate(Year = as.numeric(gsub("Year_","",Year))) %>%
+  group_by(simulation) %>% 
+  mutate(cumulative = cumsum(Value)) %>% 
+  arrange(-simulation) %>% 
+  ggplot()+
+  aes(x = Year, y = cumulative, group = simulation, color = simulation)+
+  geom_line(alpha=0.1)+
+  scale_y_continuous(labels = scales::dollar)+
+  scale_x_continuous(breaks = 0:10)+
+  theme_dark()+
+  labs(title = "Cumulative Cash Flows of 10,000 Simulations"
+       ,y = "Cumulative Cash Flow")
+```
+
+![](README_files/figure-markdown_github/unnamed-chunk-23-1.png)
+
+Compute IRR for each simulation:
+--------------------------------
+
+``` r
+# this function applies IRR by row
 IRR_byrow <- function(row) IRR(as.numeric(row))
 
-NOI_Mat$IRR <- apply(NOI_Mat, 1, IRR_byrow)
+Cash_Flows$IRR <- apply(Cash_Flows, 1, IRR_byrow)
 
-head(NOI_Mat)
+head(Cash_Flows$IRR)
 ```
 
-    ## # A tibble: 6 x 12
-    ##      Year_0  Year_1  Year_2  Year_3  Year_4  Year_5  Year_6    Year_7
-    ##       <dbl>   <dbl>   <dbl>   <dbl>   <dbl>   <dbl>   <dbl>     <dbl>
-    ## 1 -31500000 2710200 2212145 2782856 1510110 2145488 2314575 2147745.7
-    ## 2 -31500000 3461208 2034560 2185865 1718766 2161735 2166230  650915.0
-    ## 3 -31500000 2403579 2115229 1898906 1117627 2198728 2292104  352541.3
-    ## 4 -31500000 2480998 2003821 2699094 1729198 2056147 2364487  640361.3
-    ## 5 -31500000 2213582 2007102 2695110  776585 2128837 2504483 1754267.5
-    ## 6 -31500000 2137601 2142499 2558708 1762329 2119933 2232987 1787973.7
-    ## # ... with 4 more variables: Year_8 <dbl>, Year_9 <dbl>, Year_10 <dbl>,
-    ## #   IRR <dbl>
+    ## [1] 0.11349909 0.08986591 0.09380056 0.10300989 0.09785901 0.08149569
+
+Distribution of Unlevered IRRs:
+===============================
 
 ``` r
-NOI_Mat$IRR %>% summary()
-```
-
-    ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
-    ## 0.05391 0.08553 0.09314 0.09398 0.10146 0.16121
-
-``` r
-NOI_Mat %>% 
-  mutate(bucket = round(IRR,2)) %>% 
+Cash_Flows %>% 
+  mutate(bucket = round(IRR,3)) %>% 
   group_by(bucket) %>% 
   summarise(count = n()) %>% 
   mutate(Probability = count/sum(count)) %>% 
@@ -531,8 +593,8 @@ NOI_Mat %>%
   scale_x_continuous(labels = scales::percent)+
   scale_y_continuous(labels = scales::percent)+
   theme_minimal()+
-  labs(title = "Unlevered IRRs Distribution:"
+  labs(title = "Unlevered IRR Distribution:"
        , x = "Unlevered IRR")
 ```
 
-![](README_files/figure-markdown_github/unnamed-chunk-21-1.png)
+![](README_files/figure-markdown_github/unnamed-chunk-25-1.png)
